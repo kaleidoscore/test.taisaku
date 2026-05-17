@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>歴史テスト対策</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:sans-serif;
+    background:linear-gradient(135deg,#74ebd5,#9face6);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.container{
+    width:100%;
+    max-width:700px;
+    background:white;
+    border-radius:25px;
+    padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+    font-size:clamp(28px,5vw,42px);
+}
+
+.setting{
+    margin-bottom:20px;
+}
+
+label{
+    display:block;
+    margin-bottom:10px;
+    font-size:18px;
+}
+
+input{
+    width:100%;
+    padding:15px;
+    border-radius:12px;
+    border:1px solid #ccc;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    margin-top:12px;
+    font-size:17px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    transform:scale(1.02);
+}
+
+#start-btn{
+    background:#4a90e2;
+    color:white;
+}
+
+.choice-btn{
+    background:#555;
+    color:white;
+}
+
+.choice-btn:hover{
+    background:#444;
+}
+
+.return-btn{
+    background:#27ae60;
+    color:white;
+}
+
+#quiz-area{
+    display:none;
+}
+
+.top-info{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:20px;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+#timer{
+    color:#e74c3c;
+    font-size:20px;
+    font-weight:bold;
+}
+
+#score{
+    font-size:20px;
+    font-weight:bold;
+}
+
+#question{
+    font-size:clamp(24px,4vw,34px);
+    margin-bottom:25px;
+    line-height:1.5;
+}
+
+#choices{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+#text-answer{
+    margin-top:10px;
+    display:none;
+}
+
+#result{
+    margin-top:25px;
+    min-height:120px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* 正解演出 */
+
+.correct-animation{
+    animation:pop 0.5s ease;
+    color:#27ae60;
+    font-size:30px;
+    font-weight:bold;
+    text-align:center;
+}
+
+.combo-text{
+    display:block;
+    margin-top:12px;
+    font-size:40px;
+    animation:glow 0.8s infinite alternate;
+}
+
+/* 不正解 */
+
+.wrong-animation{
+    animation:shake 0.5s ease;
+    color:#e74c3c;
+    font-size:28px;
+    font-weight:bold;
+    text-align:center;
+}
+
+/* アニメーション */
+
+@keyframes pop{
+    0%{
+        transform:scale(0.5);
+        opacity:0;
+    }
+
+    70%{
+        transform:scale(1.2);
+    }
+
+    100%{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+@keyframes shake{
+    0%{transform:translateX(0);}
+    25%{transform:translateX(-10px);}
+    50%{transform:translateX(10px);}
+    75%{transform:translateX(-10px);}
+    100%{transform:translateX(0);}
+}
+
+@keyframes glow{
+    from{
+        transform:scale(1);
+        opacity:0.7;
+    }
+
+    to{
+        transform:scale(1.1);
+        opacity:1;
+    }
+}
+
+/* スマホ */
+
+@media(max-width:600px){
+
+    .container{
+        padding:20px;
+    }
+
+    button{
+        padding:18px;
+        font-size:18px;
+    }
+
+    #question{
+        font-size:24px;
+    }
+
+    .combo-text{
+        font-size:32px;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>歴史テスト対策</h1>
+
+    <!-- 設定画面 -->
+    <div id="setting-area">
+
+        <div class="setting">
+            <label>制限時間（秒）</label>
+            <input type="number" id="time-input" value="30">
+        </div>
+
+        <div class="setting">
+            <label>問題数</label>
+            <input type="number" id="question-count-input" value="5">
+        </div>
+
+        <button id="start-btn">出題開始</button>
+
+    </div>
+
+    <!-- クイズ画面 -->
+    <div id="quiz-area">
+
+        <div class="top-info">
+            <div id="score">点数: 0</div>
+            <div id="timer">残り時間: 0</div>
+        </div>
+
+        <h2 id="question"></h2>
+
+        <div id="choices"></div>
+
+        <input
+            type="text"
+            id="text-answer"
+            placeholder="解答を入力"
+        >
+
+        <div id="result"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* サンプル問題 */
+const questions = [
+     {
+    "type": "text",
+    "question": "15世紀末からヨーロッパ人が直接アジアなどへ航海した時代を何というか。",
+    "answer": ["大航海時代"]
+  },
+  {
+    "type": "choice",
+    "question": "コロンブスを支援し、西回りでの航海を行わせたヨーロッパの国はどこか。",
+    "choice": ["スペイン", "ポルトガル", "イギリス", "オランダ"],
+    "answer": ["スペイン"]
+  },
+  {
+    "type": "text",
+    "question": "1522年にマゼランの部下たちが史上初めて達成した、世界を一周する偉業を何というか。",
+    "answer": ["世界周航", "世界一周"]
+  },
+  {
+    "type": "choice",
+    "question": "新大陸がアジアとは異なる未知の大陸であることを指摘し、その名が「アメリカ」の由来となった探検家は誰か。",
+    "choice": ["アメリゴ・ヴェスプッチ", "コロンブス", "マゼラン", "バスコ・ダ・ガマ"],
+    "answer": ["アメリゴ・ヴェスプッチ"]
+  },
+  {
+    "type": "text",
+    "question": "ヨーロッパ、西アフリカ、アメリカ大陸の間で行われた、奴隷や特産品を動かした貿易を何というか。",
+    "answer": ["大西洋三角貿易", "三角貿易"]
+  },
+  {
+    "type": "choice",
+    "question": "大西洋三角貿易において、西アフリカからアメリカ大陸のプランテーションへ強制的に連行された人々を何というか。",
+    "choice": ["黒人奴隷", "ジェントリ", "公行", "アイヌ"],
+    "answer": ["黒人奴隷"]
+  },
+  {
+    "type": "text",
+    "question": "大西洋三角貿易の拠点として莫大な利益を得て、急速に発展したイギリスの港町はどこか。",
+    "answer": ["リヴァプール", "リバプール"]
+  },
+  {
+    "type": "choice",
+    "question": "アメリカ大陸のプランテーションで栽培され、紅茶の普及とともにヨーロッパでの需要が爆発的に高まった農産物は何か。",
+    "choice": ["砂糖", "綿花", "タバコ", "香辛料"],
+    "answer": ["砂糖"]
+  },
+  {
+    "type": "text",
+    "question": "17世紀前半、明に代わって中国を支配した満洲族の王朝は何か。",
+    "answer": ["清"]
+  },
+  {
+    "type": "choice",
+    "question": "清を建国した、中国東北地方の満洲（女真）族の民族指導者は誰か。",
+    "choice": ["ヌルハチ", "ホンタイジ", "順治帝", "康熙帝"],
+    "answer": ["ヌルハチ"]
+  },
+  {
+    "type": "text",
+    "question": "清の軍事・行政組織で、満洲族独自の伝統的な組織を何というか。",
+    "answer": ["八旗"]
+  },
+  {
+    "type": "choice",
+    "question": "清が漢人を支配・威圧するために強制した、前頭部を剃りあげて後頭部の髪を編み込む満洲族の髪型を何というか。",
+    "choice": ["辮髪", "丁髷", "文字の獄", "満漢併用"],
+    "answer": ["辮髪"]
+  },
+  {
+    "type": "text",
+    "question": "清の康熙帝が、ロシアとの間で結んだ国境画定の条約は何か。",
+    "answer": ["ネルチンスク条約"]
+  },
+  {
+    "type": "choice",
+    "question": "清において、反満洲的な思想や言論、著書を厳しく検閲・弾圧した行為を何というか。",
+    "choice": ["文字の獄", "科挙", "公行", "辮髪"],
+    "answer": ["文字の獄"]
+  },
+  {
+    "type": "text",
+    "question": "清が中央の重要な官僚ポストに、満洲族と漢人を同数ずつ採用した民族融和のための制度を何というか。",
+    "answer": ["満漢併用", "満漢併用制"]
+  },
+  {
+    "type": "choice",
+    "question": "1757年、清の乾隆帝がヨーロッパ諸国との貿易港を唯一限定した都市はどこか。",
+    "choice": ["広州", "上海", "寧波", "アモイ"],
+    "answer": ["広州"]
+  },
+  {
+    "type": "text",
+    "question": "広州でのヨーロッパ貿易を独占することを認められた、清の特権商人の組合を何というか。",
+    "answer": ["公行"]
+  },
+  {
+    "type": "choice",
+    "question": "清の時代に、人頭税を地税の中に繰り入れて一本化し、銀で一括納入させるようになった税制を何というか。",
+    "choice": ["地丁銀", "租庸調", "両税法", "一条鞭法"],
+    "answer": ["地丁銀"]
+  },
+  {
+    "type": "text",
+    "question": "清の時代にも引き続き実施されていた、伝統的な役人採用のための筆記試験を何というか。",
+    "answer": ["科挙"]
+  },
+  {
+    "type": "choice",
+    "question": "17世紀のイギリスにおいて、地方の富裕な地主層として社会の主導権を握り、議会の多数派を占めた階級を何というか。",
+    "choice": ["ジェントリ", "ヨーマン", "貴族", "独立派"],
+    "answer": ["ジェントリ"]
+  },
+  {
+    "type": "text",
+    "question": "1628年、イギリス議会が国王チャールズ1世に認めさせた、不当な課税や逮捕に抗議する文書は何か。",
+    "answer": ["権利の請願"]
+  },
+  {
+    "type": "choice",
+    "question": "1642年にイギリスで始まった、国王派と議会派による内戦を伴う革命を何というか。",
+    "choice": ["ピューリタン革命", "名誉革命", "フランス革命", "産業革命"],
+    "answer": ["ピューリタン革命"]
+  },
+  {
+    "type": "text",
+    "question": "ピューリタン革命で議会派を勝利に導き、強力な「鉄騎隊」を組織した人物は誰か。",
+    "answer": ["クロムウェル"]
+  },
+  {
+    "type": "choice",
+    "question": "チャールズ1世の処刑後、イギリスで成立した、国王のいない政治体制を何というか。",
+    "choice": ["共和政", "立憲君主政", "絶対王政", "幕藩体制"],
+    "answer": ["共和政"]
+  },
+  {
+    "type": "text",
+    "question": "クロムウェルがオランダの中継貿易を排除し、自国の海運業を保護するために発布した法律は何か。",
+    "answer": ["航海法"]
+  },
+  {
+    "type": "choice",
+    "question": "クロムウェルが就任し、議会を解散して事実上の独裁政治を行う根拠となった最高政務官の職名を何というか。",
+    "choice": ["護国卿", "大統領", "老中", "皇帝"],
+    "answer": ["護国卿"]
+  },
+  {
+    "type": "text",
+    "question": "クロムウェルの死後、独裁への反発から1660年にチャールズ2世が即位して従来の政治体制に戻ったことを何というか。",
+    "answer": ["王政復古"]
+  },
+  {
+    "type": "choice",
+    "question": "1688年、専制を行う国王ジェームズ2世を亡命させ、流血なしに新しい国王を迎えた革命を何というか。",
+    "choice": ["名誉革命", "ピューリタン革命", "価格革命", "宗教改革"],
+    "answer": ["名誉革命"]
+  },
+  {
+    "type": "text",
+    "question": "名誉革命の際、オランダから新国王（ウィリアム3世）として共同統治者に迎えられた人物は誰か。",
+    "answer": ["ウィリアム", "ウィレム"]
+  },
+  {
+    "type": "choice",
+    "question": "1689年、イギリス議会が制定した、王権を制限して立憲君主政の基礎となった法律は何か。",
+    "choice": ["権利の章典", "権利の請願", "大憲章", "航海法"],
+    "answer": ["権利の章典"]
+  },
+  {
+    "type": "text",
+    "question": "江戸幕府が敷いた、将軍直轄の領地と、各地の大名が支配する藩によって構成された政治体制を何というか。",
+    "answer": ["幕藩体制"]
+  },
+  {
+    "type": "choice",
+    "question": "江戸幕府が、オランダや清（中国）との貿易窓口を管理するために長崎に配置した役職は何か。",
+    "choice": ["長崎奉行", "京都所司代", "城代", "大目付"],
+    "answer": ["長崎奉行"]
+  },
+  {
+    "type": "text",
+    "question": "江戸幕府の「4つの窓」のうち、対馬藩の宗氏を窓口として、正式な国交を結んでいた国はどこか。",
+    "answer": ["朝鮮", "李氏朝鮮"]
+  },
+  {
+    "type": "choice",
+    "question": "薩摩藩の島津氏に侵攻されて支配を受けつつも、幕府の窓口として中国への朝貢貿易を続けた王国はどこか。",
+    "choice": ["琉球王国", "対馬藩", "松前藩", "清"],
+    "answer": ["琉球王国"]
+  },
+  {
+    "type": "text",
+    "question": "松前藩を窓口として、幕府が交易や支配を行っていた、アイヌ民族の住む地域を何というか。",
+    "answer": ["蝦夷地"]
+  },
+  {
+    "type": "choice",
+    "question": "江戸時代、日本海側の各港から下関を経由して大坂や江戸へ向かう、物流を大きく発展させた航路を何というか。",
+    "choice": ["西廻り海運", "東廻り海運", "南蛮貿易", "公行貿易"],
+    "answer": ["西廻り海運"]
+  },
+  {
+    "type": "text",
+    "question": "西廻り海運の拠点・起点として大いに発展した、出羽国（山形）の港町はどこか。",
+    "answer": ["酒田"]
+  },
+  {
+    "type": "choice",
+    "question": "出羽国（山形）で盛んに栽培され、高級な染料や化粧品の原料として最上川から上方に運ばれた有名な商品作物は何か。",
+    "choice": ["紅花", "綿花", "タバコ", "お茶"],
+    "answer": ["紅花"]
+  },
+  {
+    "type": "text",
+    "question": "江戸時代中期、多額の財政赤字に苦しむ米沢藩の藩主となり、特産品の開発などで財政を再建した人物は誰か。",
+    "answer": ["上杉治憲", "上杉鷹山"]
+  },
+  {
+    "type": "choice",
+    "question": "上杉治憲（鷹山）が米沢藩の藩校として再興し、医学や学問を学ばせて人材育成に努めた学校は何か。",
+    "choice": ["興譲館", "弘道館", "明倫館", "学校"],
+    "answer": ["興譲館"]
+  },
+  {
+    "type": "text",
+    "question": "1492年にコロンブスが到達したカリブ海の諸島は、のちに何諸島と呼ばれるようになったか。",
+    "answer": ["西インド諸島"]
+  },
+  {
+    "type": "choice",
+    "question": "ピューリタン革命の際、議会派によって処刑されたイギリスの国王は誰か。",
+    "choice": ["チャールズ1世", "ジェームズ2世", "チャールズ2世", "ウィリアム3世"],
+    "answer": ["チャールズ1世"]
+  },
+  {
+    "type": "text",
+    "question": "1689年に清の康熙帝とロシアの間で結ばれ、両国の国境を画定した条約は何か。",
+    "answer": ["ネルチンスク条約"]
+  },
+  {
+    "type": "choice",
+    "question": "清の乾隆帝の時代、ヨーロッパ船の来航地が制限された唯一の貿易港はどこか。",
+    "choice": ["広州", "上海", "寧波", "南京"],
+    "answer": ["広州"]
+  },
+  {
+    "type": "text",
+    "question": "江戸時代、最上川の水運を利用して酒田へ集められ、そこから西廻り海運で上方に運ばれた山形特産の商品作物は何か。",
+    "answer": ["紅花"]
+  },
+  {
+    "type": "choice",
+    "question": "江戸幕府の対外窓口（4つの窓）のうち、アイヌ民族との交易や支配を担当していた藩はどこか。",
+    "choice": ["松前藩", "対馬藩", "薩摩藩", "米沢藩"],
+    "answer": ["松前藩"]
+  },
+  {
+    "type": "text",
+    "question": "大西洋三角貿易において、ヨーロッパから西アフリカへ送られた、黒人奴隷の取引に使われた主な手工業製品は何か。",
+    "answer": ["武器・綿織物", "綿織物"]
+  },
+  {
+    "type": "choice",
+    "question": "名誉革命によって国王ジェームズ2世が亡命したあと、新国王として共同統治者に迎えられたオランダ総督は誰か。",
+    "choice": ["ウィリアム", "クロムウェル", "チャールズ1世", "ルイ14世"],
+    "answer": ["ウィリアム"]
+  },
+  {
+    "type": "text",
+    "question": "清の軍事・行政組織であり、満洲族独自の伝統的な組織を何というか。",
+    "answer": ["八旗"]
+  },
+  {
+    "type": "choice",
+    "question": "イギリス議会が1628年に国王に提出し、不当な課税や逮捕の禁止を求めた文書を何というか。",
+    "choice": ["権利の請願", "権利の章典", "大憲章", "航海法"],
+    "answer": ["権利の請願"]
+  },
+  {
+    "type": "text",
+    "question": "江戸幕府が敷いた、将軍の直轄領と、各大名が支配する藩によって構成された政治体制を何というか。",
+    "answer": ["幕藩体制"]
+  },
+  {
+    "type": "choice",
+    "question": "多額の財政赤字に苦しむ米沢藩の藩主となり、特産品の開発などで藩の財政を再建した人物は誰か。",
+    "choice": ["上杉治憲", "最上義光", "伊達政宗", "徳川吉宗"],
+    "answer": ["上杉治憲"]
+  },
+  {
+    "type": "text",
+    "question": "大西洋三角貿易の拠点として莫大な利益を得て、急速に発展したイギリスの港町はどこか。",
+    "answer": ["リヴァプール", "リバプール"]
+  },
+  {
+    "type": "choice",
+    "question": "清が漢人を支配・威圧するために強制した、前頭部を剃りあげて後頭部の髪を編み込む独特の髪型を何というか。",
+    "choice": ["辮髪", "丁髷", "文字の獄", "公行"],
+    "answer": ["辮髪"]
+  },
+  {
+    "type": "text",
+    "question": "ピューリタン革命において、国王チャールズ1世を処刑したのちに成立した、国王のいない政治体制を何というか。",
+    "answer": ["共和政", "共和制"]
+  },
+  {
+    "type": "choice",
+    "question": "江戸時代に長崎奉行が管理し、幕府がキリスト教国以外で唯一国交（通商）を認めていたヨーロッパの国はどこか。",
+    "choice": ["オランダ", "スペイン", "ポルトガル", "イギリス"],
+    "answer": ["オランダ"]
+  },
+  {
+    "type": "text",
+    "question": "清の第6代皇帝で、領土を最大に広げ、1757年にヨーロッパ諸国との貿易港を1カ所に制限した皇帝は誰か。",
+    "answer": ["乾隆帝"]
+  },
+  {
+    "type": "choice",
+    "question": "1522年にマゼランの部下たちが史上初めて達成した、世界を一周する偉業を何というか。",
+    "choice": ["世界周航", "大航海時代", "価格革命", "三角貿易"],
+    "answer": ["世界周航"]
+  },
+  {
+    "type": "text",
+    "question": "イギリスで1660年、クロムウェルの死後にチャールズ2世が即位し、従来の君主政に戻った出来事を何というか。",
+    "answer": ["王政復古"]
+  },
+  {
+    "type": "choice",
+    "question": "江戸幕府の「4つの窓」のうち、対馬藩の宗氏を窓口として、正式な国交を結んでいた国はどこか。",
+    "choice": ["朝鮮", "琉球王国", "オランダ", "清"],
+    "answer": ["朝鮮"]
+  },
+  {
+    "type": "text",
+    "question": "清が中央の重要な官僚ポストに、満洲族と漢人を同数ずつ採用した民族融和のための制度を何というか。",
+    "answer": ["満漢併用", "満漢併用制"]
+  },
+  {
+    "type": "choice",
+    "question": "1689年にイギリス議会が制定し、王権を制限して立憲君主政の基礎となった法律は何か。",
+    "choice": ["権利の章典", "権利の請願", "大憲章", "航海法"],
+    "answer": ["権利の章典"]
+  },
+  {
+    "type": "text",
+    "question": "新大陸がアジアではなく未知の大陸であることを指摘し、その名が「アメリカ」の由来となった探検家は誰か。",
+    "answer": ["アメリゴ・ヴェスプッチ", "アメリゴ＝ヴェスプッチ"]
+  },
+  {
+    "type": "choice",
+    "question": "大西洋三角貿易において、アメリカのプランテーションからヨーロッパへ運ばれ、お茶の普及とともに需要が激増した農産物は何か。",
+    "choice": ["砂糖", "綿花", "タバコ", "香辛料"],
+    "answer": ["砂糖"]
+  },
+  {
+    "type": "text",
+    "question": "上杉治憲（鷹山）が米沢藩の藩校として再興し、医学や学問を学ばせて人材育成に努めた学校は何か。",
+    "answer": ["興譲館"]
+  },
+  {
+    "type": "choice",
+    "question": "1688年、専制政治を行う国王ジェームズ2世を流血なしに亡命させ、新しい国王を迎えたイギリスの革命を何というか。",
+    "choice": ["名誉革命", "ピューリタン革命", "フランス革命", "産業革命"],
+    "answer": ["名誉革命"]
+  },
+  {
+    "type": "text",
+    "question": "清の広州において、ヨーロッパ諸国との貿易業務を独占することを認められた特権商人の組合を何というか。",
+    "answer": ["公行"]
+  },
+  {
+    "type": "choice",
+    "question": "江戸幕府がオランダや清（中国）との貿易窓口を管理するために、長崎に配置した幕府の役職は何か。",
+    "choice": ["長崎奉行", "京都所司代", "老中", "大目付"],
+    "answer": ["長崎奉行"]
+  },
+  {
+    "type": "text",
+    "question": "1642年にイギリスで始まった、国王派と議会派の内戦を伴う革命を何というか。",
+    "answer": ["ピューリタン革命"]
+  },
+  {
+    "type": "choice",
+    "question": "コロンブスの西回り航海を熱心に支援し、新大陸への航路を開かせたヨーロッパの国はどこか。",
+    "choice": ["スペイン", "ポルトガル", "イギリス", "オランダ"],
+    "answer": ["スペイン"]
+  },
+  {
+    "type": "text",
+    "question": "清の時代に、人頭税を地税の中に繰り入れて一本化し、銀で一括納入させるようになった税制を何というか。",
+    "answer": ["地丁銀", "地丁銀制"]
+  },
+  {
+    "type": "choice",
+    "question": "江戸幕府の「4つの窓」のうち、薩摩藩の島津氏が侵攻して支配しつつ、中国への朝貢貿易を続けさせた王国はどこか。",
+    "choice": ["琉球王国", "対馬藩", "松前藩", "朝鮮"],
+    "answer": ["琉球王国"]
+  },
+  {
+    "type": "text",
+    "question": "ピューリタン革命において、熱心なカルヴァン派を率いて議会派を勝利に導き、強力な「鉄騎隊」を組織した人物は誰か。",
+    "answer": ["クロムウェル"]
+  },
+  {
+    "type": "choice",
+    "question": "17世紀のイギリスにおいて、地方の富裕な地主層として社会の主導権を握り、議会の多数派を占めた階級を何というか。",
+    "choice": ["ジェントリ", "ヨーマン", "貴族", "ブルジョワジー"],
+    "answer": ["ジェントリ"]
+  },
+  {
+    "type": "text",
+    "question": "江戸時代、日本海側の各港から下関を経由して大坂や江戸へ向かい、物流を大きく発展させた航路を何というか。",
+    "answer": ["西廻り海運", "西廻り航路"]
+  },
+  {
+    "type": "choice",
+    "question": "1651年にクロムウェルがオランダの中継貿易を排除し、自国の海運業を保護するために発布した法律は何か。",
+    "choice": ["航海法", "審査法", "人身保護法", "穀物法"],
+    "answer": ["航海法"]
+  },
+  {
+    "type": "text",
+    "question": "清において、反満洲的な思想や言論、著書を厳しく検閲・弾圧した行為を何というか。",
+    "answer": ["文字の獄"]
+  },
+  {
+    "type": "choice",
+    "question": "清の第4代皇帝で、国内を安定させ、ロシアとの間にネルチンスク条約を結んだ皇帝は誰か。",
+    "choice": ["康熙帝", "乾隆帝", "ヌルハチ", "ホンタイジ"],
+    "answer": ["康熙帝"]
+  },
+  {
+    "type": "text",
+    "question": "松前藩を窓口として、江戸幕府が交易や支配を行っていた、アイヌ民族の住む地域を何というか。",
+    "answer": ["蝦夷地"]
+  },
+  {
+    "type": "choice",
+    "question": "西廻り海運の拠点・起点として大いに発展した、出羽国（山形）の港町はどこか。",
+    "choice": ["酒田", "米沢", "山形", "鶴岡"],
+    "answer": ["酒田"]
+  }
+];
+
+let currentQuestion = 0;
+let score = 0;
+let timeLeft = 0;
+let timer;
+let maxQuestions = 0;
+
+const questionEl = document.getElementById("question");
+const choicesEl = document.getElementById("choices");
+const resultEl = document.getElementById("result");
+const scoreEl = document.getElementById("score");
+const timerEl = document.getElementById("timer");
+const textAnswer = document.getElementById("text-answer");
+
+/* シャッフル */
+
+function shuffleArray(array){
+
+    for(let i = array.length - 1; i > 0; i--){
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+/* 問題表示 */
+
+function loadQuestion(){
+
+    resultEl.innerHTML = "";
+    choicesEl.innerHTML = "";
+    textAnswer.style.display = "none";
+
+    const q = questions[currentQuestion];
+
+    questionEl.textContent = q.question;
+
+    // 選択式
+    if(q.type === "choice"){
+
+        q.choices.forEach(choice => {
+
+            const btn = document.createElement("button");
+
+            btn.textContent = choice;
+            btn.classList.add("choice-btn");
+
+            btn.onclick = () => checkAnswer(choice);
+
+            choicesEl.appendChild(btn);
+
+        });
+    }
+
+    // 記述式
+    else if(q.type === "text"){
+
+        textAnswer.style.display = "block";
+
+        textAnswer.value = "";
+
+        textAnswer.focus();
+
+        textAnswer.onkeydown = (e) => {
+
+            if(e.key === "Enter"){
+
+                checkAnswer(textAnswer.value);
+            }
+        };
+    }
+
+    scoreEl.textContent = `点数: ${score}`;
+}
+
+/* 回答判定 */
+
+function checkAnswer(choice){
+
+    const q = questions[currentQuestion];
+
+    const buttons = document.querySelectorAll(".choice-btn");
+
+    buttons.forEach(btn => {
+        btn.disabled = true;
+    });
+
+    const userAnswer = choice.toLowerCase().trim();
+
+    const answers = q.answer.map(a =>
+        a.toLowerCase().trim()
+    );
+
+    // ← ここがバグ修正ポイント
+    if(answers.includes(userAnswer)){
+
+        score++;
+
+        let comboText = "";
+
+        if(score >= 1 && score <= 4){
+
+            comboText = "NICE!";
+
+        }else if(score >= 5 && score <= 9){
+
+            comboText = "GOOD!";
+
+        }else if(score >= 10 && score <= 15){
+
+            comboText = "EXCELLENT!";
+
+        }else{
+
+            comboText = `${score} COMBO!!`;
+        }
+
+        resultEl.innerHTML = `
+            <div class="correct-animation">
+                ○ 正解！<br>
+                <span class="combo-text">${comboText}</span>
+            </div>
+        `;
+
+    }else{
+
+        resultEl.innerHTML = `
+            <div class="wrong-animation">
+                × 不正解...<br>
+                正解は ${q.answer[0]}
+            </div>
+        `;
+    }
+
+    scoreEl.textContent = `点数: ${score}`;
+
+    // 次の問題
+    setTimeout(() => {
+
+        currentQuestion++;
+
+        if(currentQuestion >= maxQuestions){
+
+            endQuiz();
+            return;
+        }
+
+        loadQuestion();
+
+    },800);
+}
+
+/* タイマー */
+
+function startTimer(){
+
+    clearInterval(timer);
+
+    timer = setInterval(() => {
+
+        timeLeft--;
+
+        timerEl.textContent = `残り時間: ${timeLeft}`;
+
+        if(timeLeft <= 0){
+
+            clearInterval(timer);
+
+            endQuiz();
+        }
+
+    },1000);
+}
+
+/* 終了 */
+
+function endQuiz(){
+
+    clearInterval(timer);
+
+    questionEl.textContent = "終了";
+
+    choicesEl.innerHTML = "";
+
+    textAnswer.style.display = "none";
+
+    resultEl.innerHTML = `
+        <div class="correct-animation">
+
+            最終点数
+
+            <br>
+
+            <span class="combo-text">
+                ${score} / ${maxQuestions}
+            </span>
+
+            <button class="return-btn" onclick="returnTitle()">
+                タイトルへ戻る
+            </button>
+
+        </div>
+    `;
+}
+
+/* タイトルへ戻る */
+
+function returnTitle(){
+
+    document.getElementById("quiz-area").style.display = "none";
+
+    document.getElementById("setting-area").style.display = "block";
+
+    resultEl.innerHTML = "";
+}
+
+/* 開始 */
+
+let shuffledQuestions = [];
+
+
+// =========================
+// 問題表示
+// =========================
+
+<!-- loadQuestion 関数をこれで丸ごと上書き -->
+
+function loadQuestion(){
+
+    resultEl.innerHTML = "";
+
+    choicesEl.innerHTML = "";
+
+    textAnswer.style.display = "none";
+
+    const q = shuffledQuestions[currentQuestion];
+
+    questionEl.textContent = q.question;
+
+    // =========================
+    // 選択式
+    // =========================
+    if(q.type === "choice"){
+
+        q.choice.forEach(choice => {
+
+            const btn = document.createElement("button");
+
+            btn.textContent = choice;
+
+            btn.classList.add("choice-btn");
+
+            btn.onclick = () => checkAnswer(choice);
+
+            choicesEl.appendChild(btn);
+
+        });
+    }
+
+    // =========================
+    // 記述式
+    // =========================
+    else if(q.type === "text"){
+
+        textAnswer.style.display = "block";
+
+        textAnswer.value = "";
+
+        textAnswer.focus();
+
+        textAnswer.onkeydown = (e) => {
+
+            if(e.key === "Enter"){
+
+                checkAnswer(textAnswer.value);
+            }
+        };
+    }
+
+    scoreEl.textContent = `点数: ${score}`;
+}
+
+
+// =========================
+// 回答判定
+// =========================
+
+function checkAnswer(choice){
+
+    // ← ここ変更
+    const q = shuffledQuestions[currentQuestion];
+
+    const buttons = document.querySelectorAll(".choice-btn");
+
+    buttons.forEach(btn => {
+        btn.disabled = true;
+    });
+
+    const userAnswer = choice.toLowerCase().trim();
+
+    const answers = q.answer.map(a =>
+        a.toLowerCase().trim()
+    );
+
+    // 正解
+    if(answers.includes(userAnswer)){
+
+        score++;
+
+        let comboText = "";
+
+        if(score >= 1 && score <= 4){
+
+            comboText = "NICE!";
+
+        }else if(score >= 5 && score <= 9){
+
+            comboText = "GOOD!";
+
+        }else if(score >= 10 && score <= 15){
+
+            comboText = "EXCELLENT!";
+
+        }else{
+
+            comboText = `${score} COMBO!!`;
+        }
+
+        resultEl.innerHTML = `
+            <div class="correct-animation">
+                ○ 正解！<br>
+                <span class="combo-text">${comboText}</span>
+            </div>
+        `;
+
+    }
+
+    // 不正解
+    else{
+
+        resultEl.innerHTML = `
+            <div class="wrong-animation">
+                × 不正解...<br>
+                正解は ${q.answer[0]}
+            </div>
+        `;
+    }
+
+    scoreEl.textContent = `点数: ${score}`;
+
+    // 自動で次へ
+    setTimeout(() => {
+
+        currentQuestion++;
+
+        if(currentQuestion >= maxQuestions){
+
+            endQuiz();
+
+            return;
+        }
+
+        loadQuestion();
+
+    },800);
+}
+
+
+// =========================
+// 開始ボタン
+// =========================
+
+document.getElementById("start-btn").onclick = () => {
+
+    timeLeft = Number(document.getElementById("time-input").value);
+
+    maxQuestions = Number(
+        document.getElementById("question-count-input").value
+    );
+
+    if(timeLeft <= 0){
+
+        alert("制限時間は1以上を入力してください");
+
+        return;
+    }
+
+    if(maxQuestions <= 0){
+
+        alert("問題数は1以上を入力してください");
+
+        return;
+    }
+
+    // 問題コピー
+    shuffledQuestions = [...questions];
+
+    // シャッフル
+    shuffleArray(shuffledQuestions);
+
+    // 最大問題数制限
+    if(maxQuestions > shuffledQuestions.length){
+
+        maxQuestions = shuffledQuestions.length;
+    }
+
+    currentQuestion = 0;
+    score = 0;
+
+    document.getElementById("setting-area").style.display = "none";
+
+    document.getElementById("quiz-area").style.display = "block";
+
+    timerEl.textContent = `残り時間: ${timeLeft}`;
+
+    loadQuestion();
+
+    startTimer();
+};
+
+</script>
+
+</body>
+</html>
